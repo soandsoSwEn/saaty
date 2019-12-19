@@ -14,5 +14,15 @@ namespace SaatyMethod;
  */
 interface StructuringInterface
 {
-    //put your code here
+    public function setCriterion($criterion) : void;
+    
+    public function setAlternative($alternative) : void;
+    
+    public function setInitialData(string $criterion, array $alternative) : void;
+    
+    public function getCriterion() : array;
+    
+    public function getAlternative() : array;
+    
+    public function getInitialData() : array;
 }
