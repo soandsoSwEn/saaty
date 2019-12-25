@@ -18,7 +18,6 @@ class Structuring
     
     private $alternative = [];
 
-
     private $initial_data = [];
     
     public function __construct()
