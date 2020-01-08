@@ -5,7 +5,8 @@ namespace SaatyMethod;
 use Exception;
 
 /**
- * Description of Hierarchy
+ * The class contains methods for prioritizing criteria and evaluating
+ * each of the alternatives by criteria
  *
  * @author Vyacheslav
  */
@@ -47,6 +48,8 @@ class Hierarchy
      */
     const MAX_REL_CONS = 10;
     
+    private $summary_data = [];
+
     private $prioritet;
     
 
@@ -221,11 +224,15 @@ class Hierarchy
         $this->pairwise_comparisons[$criterion][$alternative1][$alternative2] = $coefficient;
     }
     
-    public function setCompEigenvectorComparisons(array $pairwise_comparisons)
+    public function setCompEigenvectorComparisons(string $criteria, array $pairwise_comparisons)
     {
         foreach ($pairwise_comparisons as $criterion => $alternatives) {
-            foreach ($alternatives as $key => $value) {
-                $this->pairwise_comparisons[$criterion][$key]['eigenvector'] = $this->calCompEigenvectorComparison($value);
+            if (strcmp($criteria, $criterion) == 0) {
+                foreach ($alternatives as $key => $value) {
+                    if (is_array($value)) {
+                        $this->pairwise_comparisons[$criterion][$key]['eigenvector'] = $this->calCompEigenvectorComparison($value);
+                    }
+                }
             }
         }
     }
@@ -260,16 +267,19 @@ class Hierarchy
         return $result;
     }
     
-    public function setCompPriorityvectorComparisons(array $pairwise_comparisons) : void
+    public function setCompPriorityvectorComparisons(string $criteria, array $pairwise_comparisons) : void
     {
         foreach ($pairwise_comparisons as $criterion => $alternatives) {
-            foreach ($alternatives as $key => $value) {
-                if(!is_array($value)) {
-                    continue;
+            if (strcmp($criterion, $criteria) == 0) {
+                foreach ($alternatives as $key => $value) {
+                    if (!is_array($value)) {
+                        continue;
+                    }
+                    $this->pairwise_comparisons[$criterion][$key]['priority_vector'] = $this->calcCompPriorityvectorComparisons($value, $this->pairwise_comparisons[$criterion]['eigenvector']);
                 }
-                $this->pairwise_comparisons[$criterion][$key]['priority_vector'] = $this->calcCompPriorityvectorComparisons($value, $this->pairwise_comparisons[$criterion]['eigenvector']);
+                unset($this->pairwise_comparisons[$criterion]['eigenvector']);
+                break;
             }
-            unset($this->pairwise_comparisons[$criterion]['eigenvector']);
         }
     }
     
@@ -297,5 +307,77 @@ class Hierarchy
             $this->n = count($alternatives) - 2; break;
         }
         $this->consistency_index = ($this->L-$this->n)/($this->n-1);
+    }
+    
+    public function setSummaryData(array $pairwise_comparisons) : void
+    {
+        if(empty($this->summary_data)) {
+            $this->initSummaryData();
+        }
+        foreach ($pairwise_comparisons as $criterion => $criterion_value) {
+            foreach ($criterion_value as $alternative => $alternative_value) {
+                if(is_array($alternative_value)) {
+                    $this->putSummaryData($criterion, $alternative, $alternative_value);
+                }
+            }
+        }
+    }
+    
+    public function initSummaryData() : void
+    {
+        $criteria = $this->structure->getCriterion();
+        $alternatives = $this->structure->getAlternative();
+        foreach ($alternatives as $alternative) {
+            foreach ($criteria as $criterion) {
+                $this->summary_data[$alternative][$criterion] = 0;
+            }
+        }
+    }
+    
+    public function putSummaryData(string $criterion, string $alternative, array $value) : void
+    {
+        $this->summary_data[$alternative][$criterion] = $value['priority_vector'];
+    }
+
+    public function getSummaryData() : array
+    {
+        return $this->summary_data;
+    }
+    
+    public function setCompPrVectorSummaryData() : void
+    {
+        foreach ($this->summary_data as $alternative => $value) {
+            if (is_array($value)) {
+                $this->summary_data[$alternative]['total_vector'] = $this->calcCompPrVectorSummaryData($value);
+            }
+        }
+    }
+    
+    public function calcCompPrVectorSummaryData(array $data) : float
+    {
+        $total_vector = 0;
+        foreach ($this->judgment_matrix as $criterion_judgment => $value_judgment) {
+            foreach ($data as $criterion => $value) {
+                if(strcmp($criterion_judgment, $criterion) == 0) {
+                    $total_vector = $total_vector + $value * $value_judgment['priority_vector'];
+                }
+            }
+        }
+        return $total_vector;
+    }
+    
+    public function getBestAlternative(array $data) : string
+    {
+        $best_alternative = [];
+        $best_value = 0;
+        foreach ($data as $alternative => $value) {
+            $best_alternative[$alternative] = $value['total_vector'];
+        }
+        $best_value = max($best_alternative);
+        if ($best_value != 0) {
+            return array_search($best_value, $best_alternative);
+        } else {
+            throw new Exception('Bad Sammary Data');
+        }
     }
 }

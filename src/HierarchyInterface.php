@@ -3,7 +3,7 @@
 namespace SaatyMethod;
 
 /**
- * HierarchyInterface is an interface that contains methods for evaluating
+ * HierarchyInterface is an interface that defines methods for evaluating
  * each alternative by criteria and obtaining a final vector of priorities,
  * based on which the best of alternatives is determined
  * 
