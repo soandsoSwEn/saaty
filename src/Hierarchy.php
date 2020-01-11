@@ -8,7 +8,7 @@ use Exception;
  * The class contains methods for prioritizing criteria and evaluating
  * each of the alternatives by criteria
  *
- * @author Vyacheslav
+ * @author Dmytriyenko Vyacheslav <dmytriyenko.vyacheslav@gmail.com>
  */
 class Hierarchy
 {
@@ -377,7 +377,7 @@ class Hierarchy
         if ($best_value != 0) {
             return array_search($best_value, $best_alternative);
         } else {
-            throw new Exception('Bad Sammary Data');
+            throw new Exception('Bad Summary Data');
         }
     }
 }

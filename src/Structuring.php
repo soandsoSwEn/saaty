@@ -20,11 +20,6 @@ class Structuring
 
     private $initial_data = [];
     
-    public function __construct()
-    {
-        //
-    }
-    
     public function setPurpose(string $purpose) : void
     {
             $this->purpose = $purpose;
